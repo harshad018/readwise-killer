@@ -4,8 +4,8 @@
 **Goal:** Build a fully functional, deployable (Firebase free tier) Readwise alternative without using LLMs.
 
 ## Week 1: Foundation & Infrastructure
-- [ ] Initialize React application.
-- [ ] Set up Firebase project (Auth, Firestore).
+- [x] Initialize React application.
+- [x] Set up Firebase project (Auth, Firestore).
 - [ ] Design database schema for Users, Articles, and Highlights.
 - [ ] Implement basic User Authentication UI (Login/Signup).
 
@@ -37,3 +37,12 @@
 - **Target for Day 2:** 
   - Initialize the React application locally.
   - Set up the Firebase project structure and add configuration files.
+
+### Day 2 (August 04, 2026)
+- **Completed:** 
+  - Initialized React application structure using CDN approach for simpler Firebase deployment without build steps.
+  - Created `index.html`, `app.js`, and `style.css`.
+  - Set up Firebase project structure (`firebase.json`, `.firebaserc`) and added `firebase-config.js` with placeholders for credentials.
+- **Target for Day 3:** 
+  - Design database schema for Users, Articles, and Highlights.
+  - Implement basic User Authentication UI (Login/Signup) and connect to Firebase Auth.
