@@ -43,6 +43,6 @@
   - Initialized React application structure using CDN approach for simpler Firebase deployment without build steps.
   - Created `index.html`, `app.js`, and `style.css`.
   - Set up Firebase project structure (`firebase.json`, `.firebaserc`) and added `firebase-config.js` with placeholders for credentials.
-- **Target for Day 3:** 
+- **Target for Day 2:** 
   - Design database schema for Users, Articles, and Highlights.
   - Implement basic User Authentication UI (Login/Signup) and connect to Firebase Auth.
