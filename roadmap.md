@@ -6,8 +6,8 @@
 ## Week 1: Foundation & Infrastructure
 - [x] Initialize React application.
 - [x] Set up Firebase project (Auth, Firestore).
-- [ ] Design database schema for Users, Articles, and Highlights.
-- [ ] Implement basic User Authentication UI (Login/Signup).
+- [x] Design database schema for Users, Articles, and Highlights.
+- [x] Implement basic User Authentication UI (Login/Signup).
 
 ## Week 2: Ingestion & Parsing
 - [ ] Implement manual highlight entry UI.
@@ -46,3 +46,12 @@
 - **Target for Day 2:** 
   - Design database schema for Users, Articles, and Highlights.
   - Implement basic User Authentication UI (Login/Signup) and connect to Firebase Auth.
+
+### Day 2 (August 04, 2026)
+- **Completed:** 
+  - Designed database schema for Users, Articles, and Highlights (documented in `schema.md`).
+  - Implemented basic User Authentication UI (Login/Signup) in React (`public/app.js`).
+  - Connected UI to Firebase Auth by exposing Firebase methods globally (`public/firebase-config.js`).
+- **Target for Day 3:** 
+  - Implement manual highlight entry UI.
+  - Set up Firestore integration to save and retrieve manual highlights for the logged-in user.
