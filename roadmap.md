@@ -10,7 +10,7 @@
 - [x] Implement basic User Authentication UI (Login/Signup).
 
 ## Week 2: Ingestion & Parsing
-- [ ] Implement manual highlight entry UI.
+- [x] Implement manual highlight entry UI.
 - [ ] Integrate Readability.js (or similar) for parsing article content from URLs.
 - [ ] Build basic "Read-it-later" list view.
 
@@ -55,3 +55,13 @@
 - **Target for Day 3:** 
   - Implement manual highlight entry UI.
   - Set up Firestore integration to save and retrieve manual highlights for the logged-in user.
+
+### Day 3 (August 05, 2026)
+- **Completed:**
+  - Implemented manual highlight entry UI in React (`public/app.js`).
+  - Set up Firestore integration to save and retrieve manual highlights for the logged-in user.
+  - Updated `firebase-config.js` to expose necessary Firestore methods.
+  - Added styling for the new UI elements in `public/style.css`.
+- **Target for Day 4:**
+  - Integrate Readability.js (or similar) for parsing article content from URLs.
+  - Build basic "Read-it-later" list view.
