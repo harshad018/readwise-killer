@@ -6,6 +6,13 @@ function App() {
     const [password, setPassword] = useState('');
     const [isLogin, setIsLogin] = useState(true);
     const [error, setError] = useState('');
+    
+    // Highlight entry state
+    const [highlightText, setHighlightText] = useState('');
+    const [sourceTitle, setSourceTitle] = useState('');
+    const [sourceAuthor, setSourceAuthor] = useState('');
+    const [highlights, setHighlights] = useState([]);
+    const [loadingHighlights, setLoadingHighlights] = useState(false);
 
     useEffect(() => {
         // Wait for firebaseAuthMethods to be available on window
@@ -15,12 +22,36 @@ function App() {
                 const { onAuthStateChanged } = window.firebaseAuthMethods;
                 const unsubscribe = onAuthStateChanged(window.firebaseAuth, (currentUser) => {
                     setUser(currentUser);
+                    if (currentUser) {
+                        fetchHighlights(currentUser.uid);
+                    } else {
+                        setHighlights([]);
+                    }
                 });
                 return () => unsubscribe();
             }
         }, 100);
         return () => clearInterval(checkAuth);
     }, []);
+
+    const fetchHighlights = async (userId) => {
+        if (!window.firebaseDb || !window.firebaseDbMethods) return;
+        setLoadingHighlights(true);
+        const { collection, query, where, getDocs } = window.firebaseDbMethods;
+        try {
+            const q = query(collection(window.firebaseDb, "highlights"), where("userId", "==", userId));
+            const querySnapshot = await getDocs(q);
+            const fetchedHighlights = [];
+            querySnapshot.forEach((doc) => {
+                fetchedHighlights.push({ id: doc.id, ...doc.data() });
+            });
+            setHighlights(fetchedHighlights);
+        } catch (err) {
+            console.error("Error fetching highlights:", err);
+        } finally {
+            setLoadingHighlights(false);
+        }
+    };
 
     const handleAuth = async (e) => {
         e.preventDefault();
@@ -49,6 +80,41 @@ function App() {
         }
     };
 
+    const handleAddHighlight = async (e) => {
+        e.preventDefault();
+        if (!user || !highlightText.trim()) return;
+
+        const { collection, addDoc, serverTimestamp } = window.firebaseDbMethods;
+        
+        try {
+            const newHighlight = {
+                userId: user.uid,
+                text: highlightText,
+                sourceTitle: sourceTitle || 'Unknown Source',
+                sourceAuthor: sourceAuthor || 'Unknown Author',
+                createdAt: serverTimestamp(),
+                // SM-2 initial values
+                repetition: 0,
+                interval: 1,
+                easiness: 2.5,
+                nextReviewDate: serverTimestamp() // Review immediately
+            };
+
+            const docRef = await addDoc(collection(window.firebaseDb, "highlights"), newHighlight);
+            
+            // Optimistically update UI
+            setHighlights([...highlights, { id: docRef.id, ...newHighlight, createdAt: new Date() }]);
+            
+            // Reset form
+            setHighlightText('');
+            setSourceTitle('');
+            setSourceAuthor('');
+        } catch (err) {
+            console.error("Error adding highlight:", err);
+            setError("Failed to add highlight.");
+        }
+    };
+
     return (
         <div className="container">
             <header>
@@ -58,9 +124,54 @@ function App() {
             <main>
                 {user ? (
                     <div>
-                        <h2>Welcome back, {user.email}!</h2>
-                        <button onClick={handleLogout}>Log Out</button>
-                        <p>Your highlights will appear here.</p>
+                        <div className="user-header">
+                            <h2>Welcome back, {user.email}!</h2>
+                            <button onClick={handleLogout}>Log Out</button>
+                        </div>
+                        
+                        <div className="add-highlight-section">
+                            <h3>Add a Highlight</h3>
+                            <form onSubmit={handleAddHighlight} className="highlight-form">
+                                <textarea 
+                                    placeholder="Enter your highlight text here..." 
+                                    value={highlightText}
+                                    onChange={(e) => setHighlightText(e.target.value)}
+                                    required
+                                    rows="4"
+                                />
+                                <input 
+                                    type="text" 
+                                    placeholder="Source Title (e.g., Book Name)" 
+                                    value={sourceTitle}
+                                    onChange={(e) => setSourceTitle(e.target.value)}
+                                />
+                                <input 
+                                    type="text" 
+                                    placeholder="Author" 
+                                    value={sourceAuthor}
+                                    onChange={(e) => setSourceAuthor(e.target.value)}
+                                />
+                                <button type="submit">Save Highlight</button>
+                            </form>
+                        </div>
+
+                        <div className="highlights-list">
+                            <h3>Your Highlights</h3>
+                            {loadingHighlights ? (
+                                <p>Loading highlights...</p>
+                            ) : highlights.length > 0 ? (
+                                <ul>
+                                    {highlights.map(h => (
+                                        <li key={h.id} className="highlight-item">
+                                            <blockquote>"{h.text}"</blockquote>
+                                            <cite>- {h.sourceTitle} by {h.sourceAuthor}</cite>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p>No highlights yet. Add one above!</p>
+                            )}
+                        </div>
                     </div>
                 ) : (
                     <div className="auth-container">
