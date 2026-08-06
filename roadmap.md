@@ -11,8 +11,8 @@
 
 ## Week 2: Ingestion & Parsing
 - [x] Implement manual highlight entry UI.
-- [ ] Integrate Readability.js (or similar) for parsing article content from URLs.
-- [ ] Build basic "Read-it-later" list view.
+- [x] Integrate Readability.js (or similar) for parsing article content from URLs.
+- [x] Build basic "Read-it-later" list view.
 
 ## Week 3: The Brain (Spaced Repetition)
 - [ ] Implement SuperMemo-2 (SM-2) algorithm in code for spaced repetition.
@@ -65,3 +65,12 @@
 - **Target for Day 4:**
   - Integrate Readability.js (or similar) for parsing article content from URLs.
   - Build basic "Read-it-later" list view.
+
+### Day 4 (August 06, 2026)
+- **Completed:**
+  - Integrated a lightweight DOMParser approach with a CORS proxy (`allorigins.win`) to fetch and parse article content from URLs without needing a backend.
+  - Built the "Read-it-later" list view in React (`public/app.js`) to display saved articles.
+  - Updated `public/style.css` to implement a responsive two-column dashboard grid for highlights and articles.
+- **Target for Day 5:**
+  - Implement SuperMemo-2 (SM-2) algorithm in code for spaced repetition.
+  - Create the "Daily Review" generation logic (fetching due highlights).
