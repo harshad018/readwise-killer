@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // TODO: Replace with your Firebase project configuration
 const firebaseConfig = {
@@ -17,7 +17,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Expose to window for app.js (which is not a module)
 window.firebaseAuth = auth;
 window.firebaseDb = db;
 window.firebaseAuthMethods = {
@@ -25,12 +24,4 @@ window.firebaseAuthMethods = {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged
-};
-window.firebaseDbMethods = {
-    collection,
-    addDoc,
-    getDocs,
-    query,
-    where,
-    serverTimestamp
 };
