@@ -10,9 +10,9 @@
 - [x] Implement basic User Authentication UI (Login/Signup).
 
 ## Week 2: Ingestion & Parsing
-- [x] Implement manual highlight entry UI.
-- [x] Integrate Readability.js (or similar) for parsing article content from URLs.
-- [x] Build basic "Read-it-later" list view.
+- [ ] Implement manual highlight entry UI.
+- [ ] Integrate Readability.js (or similar) for parsing article content from URLs.
+- [ ] Build basic "Read-it-later" list view.
 
 ## Week 3: The Brain (Spaced Repetition)
 - [ ] Implement SuperMemo-2 (SM-2) algorithm in code for spaced repetition.
@@ -38,39 +38,20 @@
   - Initialize the React application locally.
   - Set up the Firebase project structure and add configuration files.
 
-### Day 1 Part 2 (August 03, 2026)
+### Day 2 (August 04, 2026)
 - **Completed:** 
   - Initialized React application structure using CDN approach for simpler Firebase deployment without build steps.
   - Created `index.html`, `app.js`, and `style.css`.
   - Set up Firebase project structure (`firebase.json`, `.firebaserc`) and added `firebase-config.js` with placeholders for credentials.
-- **Target for Day 2:** 
+- **Target for Day 3:** 
   - Design database schema for Users, Articles, and Highlights.
   - Implement basic User Authentication UI (Login/Signup) and connect to Firebase Auth.
 
-### Day 2 (August 04, 2026)
-- **Completed:** 
-  - Designed database schema for Users, Articles, and Highlights (documented in `schema.md`).
-  - Implemented basic User Authentication UI (Login/Signup) in React (`public/app.js`).
-  - Connected UI to Firebase Auth by exposing Firebase methods globally (`public/firebase-config.js`).
-- **Target for Day 3:** 
-  - Implement manual highlight entry UI.
-  - Set up Firestore integration to save and retrieve manual highlights for the logged-in user.
-
-### Day 3 (August 05, 2026)
+### Day 3 (August 07, 2026)
 - **Completed:**
-  - Implemented manual highlight entry UI in React (`public/app.js`).
-  - Set up Firestore integration to save and retrieve manual highlights for the logged-in user.
-  - Updated `firebase-config.js` to expose necessary Firestore methods.
-  - Added styling for the new UI elements in `public/style.css`.
+  - Designed Firestore database schema and documented it in `database-schema.md`.
+  - Implemented basic User Authentication UI (Login/Signup) in `app.js`.
+  - Connected UI to Firebase Auth by exposing methods globally in `firebase-config.js`.
 - **Target for Day 4:**
-  - Integrate Readability.js (or similar) for parsing article content from URLs.
-  - Build basic "Read-it-later" list view.
-
-### Day 4 (August 06, 2026)
-- **Completed:**
-  - Integrated a lightweight DOMParser approach with a CORS proxy (`allorigins.win`) to fetch and parse article content from URLs without needing a backend.
-  - Built the "Read-it-later" list view in React (`public/app.js`) to display saved articles.
-  - Updated `public/style.css` to implement a responsive two-column dashboard grid for highlights and articles.
-- **Target for Day 5:**
-  - Implement SuperMemo-2 (SM-2) algorithm in code for spaced repetition.
-  - Create the "Daily Review" generation logic (fetching due highlights).
+  - Implement manual highlight entry UI.
+  - Set up Firestore write operations to save new highlights to the database.
