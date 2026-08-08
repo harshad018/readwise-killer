@@ -10,7 +10,7 @@
 - [x] Implement basic User Authentication UI (Login/Signup).
 
 ## Week 2: Ingestion & Parsing
-- [ ] Implement manual highlight entry UI.
+- [x] Implement manual highlight entry UI.
 - [ ] Integrate Readability.js (or similar) for parsing article content from URLs.
 - [ ] Build basic "Read-it-later" list view.
 
@@ -55,3 +55,12 @@
 - **Target for Day 4:**
   - Implement manual highlight entry UI.
   - Set up Firestore write operations to save new highlights to the database.
+
+### Day 4 (August 08, 2026)
+- **Completed:**
+  - Updated `firebase-config.js` to expose Firestore methods (`collection`, `addDoc`, `serverTimestamp`).
+  - Implemented manual highlight entry form in `app.js` with fields for text, source, and author.
+  - Added logic to save highlights to Firestore under the `highlights` collection, including initial SM-2 algorithm fields.
+- **Target for Day 5:**
+  - Build basic "Read-it-later" list view to display saved highlights.
+  - Research and begin integrating Readability.js for parsing article content from URLs.
