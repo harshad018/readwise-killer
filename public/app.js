@@ -7,6 +7,13 @@ function App() {
     const [isLogin, setIsLogin] = useState(true);
     const [error, setError] = useState('');
 
+    // New state for highlight entry
+    const [highlightText, setHighlightText] = useState('');
+    const [sourceTitle, setSourceTitle] = useState('');
+    const [authorName, setAuthorName] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveMessage, setSaveMessage] = useState('');
+
     useEffect(() => {
         // Wait for firebase to load
         const checkAuth = setInterval(() => {
@@ -42,6 +49,45 @@ function App() {
         }
     };
 
+    const handleSaveHighlight = async (e) => {
+        e.preventDefault();
+        if (!highlightText.trim()) return;
+
+        setIsSaving(true);
+        setSaveMessage('');
+
+        try {
+            const { collection, addDoc, serverTimestamp } = window.firebaseDbMethods;
+            const highlightsRef = collection(window.firebaseDb, 'highlights');
+            
+            await addDoc(highlightsRef, {
+                userId: user.uid,
+                text: highlightText,
+                source: sourceTitle || 'Unknown Source',
+                author: authorName || 'Unknown Author',
+                createdAt: serverTimestamp(),
+                // SM-2 initial values
+                repetition: 0,
+                interval: 1,
+                easiness: 2.5,
+                nextReviewDate: serverTimestamp() // Review immediately
+            });
+
+            setSaveMessage('Highlight saved successfully!');
+            setHighlightText('');
+            setSourceTitle('');
+            setAuthorName('');
+            
+            // Clear message after 3 seconds
+            setTimeout(() => setSaveMessage(''), 3000);
+        } catch (err) {
+            console.error("Error adding document: ", err);
+            setSaveMessage('Error saving highlight.');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     return (
         <div className="container">
             <header>
@@ -53,7 +99,38 @@ function App() {
                 {user ? (
                     <div>
                         <h2>Welcome back, {user.email}!</h2>
-                        <p>Your highlights will appear here.</p>
+                        
+                        <div className="highlight-form-container" style={{marginTop: '20px', padding: '20px', border: '1px solid #ccc', borderRadius: '8px'}}>
+                            <h3>Add a New Highlight</h3>
+                            <form onSubmit={handleSaveHighlight} style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                                <textarea 
+                                    placeholder="Enter your highlight text here..." 
+                                    value={highlightText}
+                                    onChange={(e) => setHighlightText(e.target.value)}
+                                    required
+                                    rows="4"
+                                    style={{padding: '8px', resize: 'vertical'}}
+                                />
+                                <input 
+                                    type="text" 
+                                    placeholder="Source (e.g., Book Title, Article URL)" 
+                                    value={sourceTitle}
+                                    onChange={(e) => setSourceTitle(e.target.value)}
+                                    style={{padding: '8px'}}
+                                />
+                                <input 
+                                    type="text" 
+                                    placeholder="Author" 
+                                    value={authorName}
+                                    onChange={(e) => setAuthorName(e.target.value)}
+                                    style={{padding: '8px'}}
+                                />
+                                <button type="submit" disabled={isSaving} style={{padding: '10px', cursor: isSaving ? 'not-allowed' : 'pointer'}}>
+                                    {isSaving ? 'Saving...' : 'Save Highlight'}
+                                </button>
+                                {saveMessage && <p style={{color: saveMessage.includes('Error') ? 'red' : 'green', fontSize: '0.9em', margin: '0'}}>{saveMessage}</p>}
+                            </form>
+                        </div>
                     </div>
                 ) : (
                     <div className="auth-form" style={{display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px', margin: '0 auto'}}>
