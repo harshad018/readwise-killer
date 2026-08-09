@@ -12,7 +12,7 @@
 ## Week 2: Ingestion & Parsing
 - [x] Implement manual highlight entry UI.
 - [ ] Integrate Readability.js (or similar) for parsing article content from URLs.
-- [ ] Build basic "Read-it-later" list view.
+- [x] Build basic "Read-it-later" list view.
 
 ## Week 3: The Brain (Spaced Repetition)
 - [ ] Implement SuperMemo-2 (SM-2) algorithm in code for spaced repetition.
@@ -64,3 +64,12 @@
 - **Target for Day 5:**
   - Build basic "Read-it-later" list view to display saved highlights.
   - Research and begin integrating Readability.js for parsing article content from URLs.
+
+### Day 5 (August 09, 2026)
+- **Completed:**
+  - Updated `firebase-config.js` to expose Firestore read methods (`getDocs`, `query`, `where`, `orderBy`).
+  - Implemented the "Read-it-later" list view in `app.js` to fetch and display the user's saved highlights from Firestore.
+  - Added state management for fetching and displaying highlights, including a loading state.
+- **Target for Day 6:**
+  - Research and begin integrating Readability.js (or a suitable alternative) for parsing article content from URLs.
+  - Create a UI component to accept a URL and trigger the parsing process.
