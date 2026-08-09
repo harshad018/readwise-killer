@@ -14,6 +14,10 @@ function App() {
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
 
+    // State for fetched highlights
+    const [highlights, setHighlights] = useState([]);
+    const [isLoadingHighlights, setIsLoadingHighlights] = useState(false);
+
     useEffect(() => {
         // Wait for firebase to load
         const checkAuth = setInterval(() => {
@@ -26,6 +30,39 @@ function App() {
         }, 100);
         return () => clearInterval(checkAuth);
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            fetchHighlights();
+        } else {
+            setHighlights([]);
+        }
+    }, [user]);
+
+    const fetchHighlights = async () => {
+        setIsLoadingHighlights(true);
+        try {
+            const { collection, query, where, orderBy, getDocs } = window.firebaseDbMethods;
+            const highlightsRef = collection(window.firebaseDb, 'highlights');
+            const q = query(
+                highlightsRef, 
+                where("userId", "==", user.uid),
+                orderBy("createdAt", "desc")
+            );
+            
+            const querySnapshot = await getDocs(q);
+            const fetchedHighlights = [];
+            querySnapshot.forEach((doc) => {
+                fetchedHighlights.push({ id: doc.id, ...doc.data() });
+            });
+            setHighlights(fetchedHighlights);
+        } catch (err) {
+            console.error("Error fetching highlights: ", err);
+            // Handle error (maybe set an error state)
+        } finally {
+            setIsLoadingHighlights(false);
+        }
+    };
 
     const handleAuth = async (e) => {
         e.preventDefault();
@@ -78,6 +115,9 @@ function App() {
             setSourceTitle('');
             setAuthorName('');
             
+            // Refresh the list
+            fetchHighlights();
+
             // Clear message after 3 seconds
             setTimeout(() => setSaveMessage(''), 3000);
         } catch (err) {
@@ -130,6 +170,27 @@ function App() {
                                 </button>
                                 {saveMessage && <p style={{color: saveMessage.includes('Error') ? 'red' : 'green', fontSize: '0.9em', margin: '0'}}>{saveMessage}</p>}
                             </form>
+                        </div>
+
+                        <div className="highlights-list-container" style={{marginTop: '30px'}}>
+                            <h3>Your Highlights</h3>
+                            {isLoadingHighlights ? (
+                                <p>Loading highlights...</p>
+                            ) : highlights.length > 0 ? (
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                                    {highlights.map(highlight => (
+                                        <div key={highlight.id} style={{padding: '15px', border: '1px solid #eee', borderRadius: '5px', backgroundColor: '#f9f9f9'}}>
+                                            <p style={{fontStyle: 'italic', marginBottom: '10px'}}>"{highlight.text}"</p>
+                                            <div style={{fontSize: '0.85em', color: '#555', display: 'flex', justifyContent: 'space-between'}}>
+                                                <span><strong>Source:</strong> {highlight.source}</span>
+                                                <span><strong>Author:</strong> {highlight.author}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p>No highlights found. Add some above!</p>
+                            )}
                         </div>
                     </div>
                 ) : (
