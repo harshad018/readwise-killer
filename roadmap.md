@@ -11,7 +11,7 @@
 
 ## Week 2: Ingestion & Parsing
 - [x] Implement manual highlight entry UI.
-- [ ] Integrate Readability.js (or similar) for parsing article content from URLs.
+- [x] Integrate Readability.js (or similar) for parsing article content from URLs.
 - [x] Build basic "Read-it-later" list view.
 
 ## Week 3: The Brain (Spaced Repetition)
@@ -73,3 +73,11 @@
 - **Target for Day 6:**
   - Research and begin integrating Readability.js (or a suitable alternative) for parsing article content from URLs.
   - Create a UI component to accept a URL and trigger the parsing process.
+### Day 6 (August 10, 2026)
+- **Completed:**
+  - Integrated `Readability.js` via CDN in `index.html`.
+  - Implemented URL parsing logic in `app.js` using `allorigins.win` CORS proxy to fetch HTML content from external URLs.
+  - Created a new UI component to accept a URL, parse the article, and save the extracted text snippet, title, and author to Firestore.
+- **Target for Day 7:**
+  - Implement SuperMemo-2 (SM-2) algorithm logic in code for spaced repetition.
+  - Create the "Daily Review" generation logic to fetch highlights that are due for review based on their `nextReviewDate`.
