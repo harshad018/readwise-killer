@@ -14,6 +14,11 @@ function App() {
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
 
+    // New state for URL parsing
+    const [articleUrl, setArticleUrl] = useState('');
+    const [isParsing, setIsParsing] = useState(false);
+    const [parseMessage, setParseMessage] = useState('');
+
     // State for fetched highlights
     const [highlights, setHighlights] = useState([]);
     const [isLoadingHighlights, setIsLoadingHighlights] = useState(false);
@@ -86,6 +91,65 @@ function App() {
         }
     };
 
+    const handleParseUrl = async (e) => {
+        e.preventDefault();
+        if (!articleUrl.trim()) return;
+
+        setIsParsing(true);
+        setParseMessage('Fetching and parsing article...');
+
+        try {
+            // Use a CORS proxy to fetch the HTML content
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(articleUrl)}`;
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
+            const htmlContent = data.contents;
+
+            if (!htmlContent) throw new Error('No content received');
+
+            // Parse the HTML string into a DOM Document
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlContent, 'text/html');
+
+            // Use Readability to extract the article
+            const reader = new Readability(doc);
+            const article = reader.parse();
+
+            if (!article) throw new Error('Could not parse article content');
+
+            // Save the parsed article to Firestore
+            const { collection, addDoc, serverTimestamp } = window.firebaseDbMethods;
+            const highlightsRef = collection(window.firebaseDb, 'highlights');
+            
+            await addDoc(highlightsRef, {
+                userId: user.uid,
+                text: article.textContent.substring(0, 1000) + (article.textContent.length > 1000 ? '...' : ''), // Save a snippet or the whole thing if small. For a real app, maybe save full text in a different field.
+                source: article.title || articleUrl,
+                author: article.byline || 'Unknown Author',
+                originalUrl: articleUrl,
+                createdAt: serverTimestamp(),
+                // SM-2 initial values
+                repetition: 0,
+                interval: 1,
+                easiness: 2.5,
+                nextReviewDate: serverTimestamp()
+            });
+
+            setParseMessage('Article parsed and saved successfully!');
+            setArticleUrl('');
+            fetchHighlights();
+            setTimeout(() => setParseMessage(''), 3000);
+
+        } catch (err) {
+            console.error("Error parsing URL: ", err);
+            setParseMessage(`Error: ${err.message}`);
+        } finally {
+            setIsParsing(false);
+        }
+    };
+
     const handleSaveHighlight = async (e) => {
         e.preventDefault();
         if (!highlightText.trim()) return;
@@ -140,6 +204,24 @@ function App() {
                     <div>
                         <h2>Welcome back, {user.email}!</h2>
                         
+                        <div className="url-parser-container" style={{marginTop: '20px', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#eef7ff'}}>
+                            <h3>Save Article from URL</h3>
+                            <form onSubmit={handleParseUrl} style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                                <input 
+                                    type="url" 
+                                    placeholder="https://example.com/article" 
+                                    value={articleUrl}
+                                    onChange={(e) => setArticleUrl(e.target.value)}
+                                    required
+                                    style={{padding: '8px'}}
+                                />
+                                <button type="submit" disabled={isParsing} style={{padding: '10px', cursor: isParsing ? 'not-allowed' : 'pointer', backgroundColor: '#0066cc', color: 'white', border: 'none', borderRadius: '4px'}}>
+                                    {isParsing ? 'Parsing...' : 'Fetch & Save Article'}
+                                </button>
+                                {parseMessage && <p style={{color: parseMessage.includes('Error') ? 'red' : 'green', fontSize: '0.9em', margin: '0'}}>{parseMessage}</p>}
+                            </form>
+                        </div>
+
                         <div className="highlight-form-container" style={{marginTop: '20px', padding: '20px', border: '1px solid #ccc', borderRadius: '8px'}}>
                             <h3>Add a New Highlight</h3>
                             <form onSubmit={handleSaveHighlight} style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
