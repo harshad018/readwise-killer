@@ -15,9 +15,9 @@
 - [x] Build basic "Read-it-later" list view.
 
 ## Week 3: The Brain (Spaced Repetition)
-- [ ] Implement SuperMemo-2 (SM-2) algorithm in code for spaced repetition.
-- [ ] Create the "Daily Review" generation logic (fetching due highlights).
-- [ ] Build the Daily Review UI (Flashcard style).
+- [x] Implement SuperMemo-2 (SM-2) algorithm in code for spaced repetition.
+- [x] Create the "Daily Review" generation logic (fetching due highlights).
+- [x] Build the Daily Review UI (Flashcard style).
 
 ## Week 4: Polish & Deployment
 - [ ] Refine UI/UX (make it look better than Readwise).
@@ -73,6 +73,7 @@
 - **Target for Day 6:**
   - Research and begin integrating Readability.js (or a suitable alternative) for parsing article content from URLs.
   - Create a UI component to accept a URL and trigger the parsing process.
+
 ### Day 6 (August 10, 2026)
 - **Completed:**
   - Integrated `Readability.js` via CDN in `index.html`.
@@ -81,3 +82,13 @@
 - **Target for Day 7:**
   - Implement SuperMemo-2 (SM-2) algorithm logic in code for spaced repetition.
   - Create the "Daily Review" generation logic to fetch highlights that are due for review based on their `nextReviewDate`.
+
+### Day 7 (August 12, 2026)
+- **Completed:**
+  - Implemented SuperMemo-2 (SM-2) algorithm logic in `app.js` for spaced repetition.
+  - Created the "Daily Review" generation logic to fetch highlights due for review.
+  - Built the Daily Review UI (Flashcard style) allowing users to rate their memory from 0 to 5.
+  - Updated Firestore documents with new SM-2 intervals and review dates.
+- **Target for Day 8:**
+  - Refine UI/UX to make the review process smoother.
+  - Conduct comprehensive testing of the spaced repetition logic and edge cases.
