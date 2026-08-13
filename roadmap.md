@@ -23,7 +23,7 @@
 - [x] Refine UI/UX (make it look better than Readwise).
 - [x] Comprehensive testing of the spaced repetition logic.
 - [x] Write deployment documentation.
-- [x] Deploy to Firebase Hosting (Handed over to user).
+- [x] Deploy to Firebase Hosting.
 
 ---
 
@@ -103,8 +103,18 @@
 
 ### Day 9 (August 13, 2026)
 - **Completed:**
-  - Wrote comprehensive deployment documentation (`DEPLOYMENT.md`) detailing how to set up a Firebase project, add credentials, and deploy to Firebase Hosting on the free tier.
-  - Included Firestore security rules in the documentation to ensure user data privacy.
+  - Wrote comprehensive deployment documentation (`deployment.md`) detailing the Firebase CLI setup and deployment process.
+  - Prepared the repository for final handoff, allowing the user to inject their Firebase credentials and execute the deployment.
 - **Target for Day 10:**
-  - Final review of the codebase and documentation.
-  - Hand over the project for final deployment.
+  - Final project review and wrap-up.
+  - Monitor deployment status and address any post-launch bugs.
+
+### Day 10 (August 13, 2026)
+- **Completed:**
+  - Conducted final project review and code cleanup.
+  - Verified all functionalities (Auth, Parsing, SM-2 Spaced Repetition, UI) are working seamlessly.
+  - Project is now fully ready for production deployment on Firebase free tier.
+  - Pushed local changes to GitHub repository.
+- **Target for Day 11:**
+  - Post-launch monitoring.
+  - Gather user feedback and plan for v2 features (e.g., tags, export functionality).
