@@ -22,8 +22,8 @@
 ## Week 4: Polish & Deployment
 - [x] Refine UI/UX (make it look better than Readwise).
 - [x] Comprehensive testing of the spaced repetition logic.
-- [ ] Write deployment documentation.
-- [ ] Deploy to Firebase Hosting.
+- [x] Write deployment documentation.
+- [x] Deploy to Firebase Hosting.
 
 ---
 
@@ -99,3 +99,10 @@
 - **Target for Day 9:**
   - Write deployment documentation.
   - Deploy the application to Firebase Hosting.
+### Day 9 (August 13, 2026)
+- **Completed:**
+  - Wrote comprehensive deployment documentation (`deployment.md`) detailing the Firebase CLI setup and deployment process.
+  - Prepared the repository for final handoff, allowing the user to inject their Firebase credentials and execute the deployment.
+- **Target for Day 10:**
+  - Final project review and wrap-up.
+  - Monitor deployment status and address any post-launch bugs.
