@@ -20,8 +20,8 @@
 - [x] Build the Daily Review UI (Flashcard style).
 
 ## Week 4: Polish & Deployment
-- [ ] Refine UI/UX (make it look better than Readwise).
-- [ ] Comprehensive testing of the spaced repetition logic.
+- [x] Refine UI/UX (make it look better than Readwise).
+- [x] Comprehensive testing of the spaced repetition logic.
 - [ ] Write deployment documentation.
 - [ ] Deploy to Firebase Hosting.
 
@@ -92,3 +92,10 @@
 - **Target for Day 8:**
   - Refine UI/UX to make the review process smoother.
   - Conduct comprehensive testing of the spaced repetition logic and edge cases.
+### Day 8 (August 13, 2026)
+- **Completed:**
+  - Refined the Daily Review UI/UX by adding a progress bar, improving button aesthetics, and implementing keyboard shortcuts (0-5) for faster rating.
+  - Conducted comprehensive testing of the SM-2 spaced repetition logic via a Python simulation script, verifying edge cases like perfect recall streaks, complete blackouts, and minimum easiness boundaries.
+- **Target for Day 9:**
+  - Write deployment documentation.
+  - Deploy the application to Firebase Hosting.
