@@ -10,6 +10,10 @@ function App() {
     const [highlightText, setHighlightText] = useState('');
     const [sourceTitle, setSourceTitle] = useState('');
     const [authorName, setAuthorName] = useState('');
+    const [tagsInput, setTagsInput] = useState('');
+    const [filterTag, setFilterTag] = useState('');
+    const [editingId, setEditingId] = useState(null);
+    const [editHighlightText, setEditHighlightText] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
 
@@ -180,6 +184,46 @@ function App() {
     };
 
 
+    
+    const handleExport = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(highlights));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "highlights.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    };
+
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this highlight?')) return;
+        try {
+            const { doc, deleteDoc } = window.firebaseDbMethods;
+            await deleteDoc(doc(window.firebaseDb, 'highlights', id));
+            fetchHighlights();
+        } catch (err) {
+            console.error("Error deleting highlight: ", err);
+        }
+    };
+
+    const startEdit = (highlight) => {
+        setEditingId(highlight.id);
+        setEditHighlightText(highlight.text);
+    };
+
+    const saveEdit = async (id) => {
+        try {
+            const { doc, updateDoc } = window.firebaseDbMethods;
+            await updateDoc(doc(window.firebaseDb, 'highlights', id), {
+                text: editHighlightText
+            });
+            setEditingId(null);
+            fetchHighlights();
+        } catch (err) {
+            console.error("Error updating highlight: ", err);
+        }
+    };
+
     const handleAuth = async (e) => {
         e.preventDefault();
         setError('');
@@ -272,6 +316,7 @@ function App() {
                 text: highlightText,
                 source: sourceTitle || 'Unknown Source',
                 author: authorName || 'Unknown Author',
+                tags: tagsInput.split(',').map(t => t.trim()).filter(t => t),
                 createdAt: serverTimestamp(),
                 repetition: 0,
                 interval: 1,
@@ -283,6 +328,7 @@ function App() {
             setHighlightText('');
             setSourceTitle('');
             setAuthorName('');
+            setTagsInput('');
             
             fetchHighlights();
 
@@ -295,29 +341,83 @@ function App() {
         }
     };
 
-    // --- Render Review Mode ---
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (isReviewMode) {
+                const key = parseInt(e.key);
+                if (key >= 0 && key <= 5) {
+                    handleRating(key);
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isReviewMode, currentReviewIndex, reviewQueue]);
+
+
+    if (!user) {
+        return (
+            <div className="auth-container">
+                <h1>Readwise Killer</h1>
+                <form onSubmit={handleAuth}>
+                    <h2>{isLogin ? 'Login' : 'Sign Up'}</h2>
+                    {error && <p className="error">{error}</p>}
+                    <input 
+                        type="email" 
+                        placeholder="Email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        required 
+                    />
+                    <input 
+                        type="password" 
+                        placeholder="Password" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        required 
+                    />
+                    <button type="submit">{isLogin ? 'Login' : 'Sign Up'}</button>
+                    <p onClick={() => setIsLogin(!isLogin)} className="toggle-auth">
+                        {isLogin ? 'Need an account? Sign up' : 'Already have an account? Login'}
+                    </p>
+                </form>
+            </div>
+        );
+    }
+
     if (isReviewMode) {
         const currentHighlight = reviewQueue[currentReviewIndex];
         return (
-            <div className="container" style={{ maxWidth: '600px', margin: '40px auto', textAlign: 'center' }}>
-                <h2>Daily Review ({currentReviewIndex + 1} / {reviewQueue.length})</h2>
-                <div style={{ padding: '30px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#f9f9f9', margin: '20px 0', minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <p style={{ fontSize: '1.2em', fontStyle: 'italic' }}>"{currentHighlight.text}"</p>
+            <div className="container review-mode">
+                <header>
+                    <h1>Daily Review</h1>
+                    <button onClick={() => setIsReviewMode(false)}>Exit Review</button>
+                </header>
+                <div className="progress-bar">
+                    <div 
+                        className="progress-fill" 
+                        style={{ width: `${((currentReviewIndex) / reviewQueue.length) * 100}%` }}
+                    ></div>
                 </div>
-                <p style={{ color: '#666' }}>- {currentHighlight.author} ({currentHighlight.source})</p>
+                <p className="progress-text">{currentReviewIndex + 1} of {reviewQueue.length}</p>
                 
-                <div style={{ marginTop: '30px' }}>
-                    <h3>How well did you remember this?</h3>
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '15px' }}>
-                        <button onClick={() => handleRating(0)} style={{ backgroundColor: '#ff4d4d', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>0 - Blackout</button>
-                        <button onClick={() => handleRating(1)} style={{ backgroundColor: '#ff9933', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>1 - Familiar</button>
-                        <button onClick={() => handleRating(2)} style={{ backgroundColor: '#ffcc00', color: 'black', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>2 - Hard</button>
-                        <button onClick={() => handleRating(3)} style={{ backgroundColor: '#99cc33', color: 'black', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>3 - Good</button>
-                        <button onClick={() => handleRating(4)} style={{ backgroundColor: '#33cc33', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>4 - Easy</button>
-                        <button onClick={() => handleRating(5)} style={{ backgroundColor: '#009933', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>5 - Perfect</button>
+                <div className="flashcard">
+                    <p className="highlight-text">"{currentHighlight.text}"</p>
+                    <p className="highlight-source">- {currentHighlight.author} ({currentHighlight.source})</p>
+                </div>
+
+                <div className="rating-controls">
+                    <p>How well did you remember this? (Press 0-5)</p>
+                    <div className="rating-buttons">
+                        <button onClick={() => handleRating(0)} title="Complete blackout">0</button>
+                        <button onClick={() => handleRating(1)} title="Incorrect, but remembered upon seeing">1</button>
+                        <button onClick={() => handleRating(2)} title="Incorrect, but seemed easy to recall">2</button>
+                        <button onClick={() => handleRating(3)} title="Correct, but required significant effort">3</button>
+                        <button onClick={() => handleRating(4)} title="Correct, after some hesitation">4</button>
+                        <button onClick={() => handleRating(5)} title="Perfect recall">5</button>
                     </div>
                 </div>
-                <button onClick={() => setIsReviewMode(false)} style={{ marginTop: '30px', padding: '8px 16px', cursor: 'pointer' }}>Exit Review</button>
             </div>
         );
     }
@@ -326,128 +426,106 @@ function App() {
         <div className="container">
             <header>
                 <h1>Readwise Killer</h1>
-                <p>Your personal knowledge base and spaced repetition system.</p>
-                {user && <button onClick={handleLogout} style={{marginTop: '10px'}}>Logout</button>}
+                <div className="header-actions">
+                    <button onClick={startDailyReview} disabled={isLoadingReview} className="review-btn">
+                        {isLoadingReview ? 'Loading...' : 'Start Daily Review'}
+                    </button>
+                    <button onClick={handleLogout}>Logout</button>
+                </div>
             </header>
+
             <main>
-                {user ? (
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h2>Welcome back, {user.email}!</h2>
-                            <button 
-                                onClick={startDailyReview} 
-                                disabled={isLoadingReview}
-                                style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: isLoadingReview ? 'not-allowed' : 'pointer', fontSize: '1.1em', fontWeight: 'bold' }}
-                            >
-                                {isLoadingReview ? 'Loading...' : 'Start Daily Review'}
-                            </button>
-                        </div>
-                        
-                        <div className="url-parser-container" style={{marginTop: '20px', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#eef7ff'}}>
-                            <h3>Save Article from URL</h3>
-                            <form onSubmit={handleParseUrl} style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                                <input 
-                                    type="url" 
-                                    placeholder="https://example.com/article" 
-                                    value={articleUrl}
-                                    onChange={(e) => setArticleUrl(e.target.value)}
-                                    required
-                                    style={{padding: '8px'}}
-                                />
-                                <button type="submit" disabled={isParsing} style={{padding: '10px', cursor: isParsing ? 'not-allowed' : 'pointer', backgroundColor: '#0066cc', color: 'white', border: 'none', borderRadius: '4px'}}>
-                                    {isParsing ? 'Parsing...' : 'Fetch & Save Article'}
-                                </button>
-                                {parseMessage && <p style={{color: parseMessage.includes('Error') ? 'red' : 'green', fontSize: '0.9em', margin: '0'}}>{parseMessage}</p>}
-                            </form>
-                        </div>
+                <section className="add-highlight">
+                    <h2>Add New Highlight</h2>
+                    <form onSubmit={handleSaveHighlight}>
+                        <textarea 
+                            placeholder="Enter highlight text..."
+                            value={highlightText}
+                            onChange={(e) => setHighlightText(e.target.value)}
+                            required
+                        />
+                        <input 
+                            type="text" 
+                            placeholder="Source (e.g., Book Title)"
+                            value={sourceTitle}
+                            onChange={(e) => setSourceTitle(e.target.value)}
+                        />
+                        <input 
+                            type="text" 
+                            placeholder="Author (optional)"
+                            value={authorName}
+                            onChange={(e) => setAuthorName(e.target.value)}
+                        />
+                        <input 
+                            type="text" 
+                            placeholder="Tags (comma separated)"
+                            value={tagsInput}
+                            onChange={(e) => setTagsInput(e.target.value)}
+                        />
+                        <button type="submit" disabled={isSaving}>
+                            {isSaving ? 'Saving...' : 'Save Highlight'}
+                        </button>
+                        {saveMessage && <p className="message">{saveMessage}</p>}
+                    </form>
+                </section>
 
-                        <div className="highlight-form-container" style={{marginTop: '20px', padding: '20px', border: '1px solid #ccc', borderRadius: '8px'}}>
-                            <h3>Add a New Highlight</h3>
-                            <form onSubmit={handleSaveHighlight} style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                                <textarea 
-                                    placeholder="Enter your highlight text here..." 
-                                    value={highlightText}
-                                    onChange={(e) => setHighlightText(e.target.value)}
-                                    required
-                                    rows="4"
-                                    style={{padding: '8px', resize: 'vertical'}}
-                                />
-                                <input 
-                                    type="text" 
-                                    placeholder="Source (e.g., Book Title, Article URL)" 
-                                    value={sourceTitle}
-                                    onChange={(e) => setSourceTitle(e.target.value)}
-                                    style={{padding: '8px'}}
-                                />
-                                <input 
-                                    type="text" 
-                                    placeholder="Author" 
-                                    value={authorName}
-                                    onChange={(e) => setAuthorName(e.target.value)}
-                                    style={{padding: '8px'}}
-                                />
-                                <button type="submit" disabled={isSaving} style={{padding: '10px', cursor: isSaving ? 'not-allowed' : 'pointer'}}>
-                                    {isSaving ? 'Saving...' : 'Save Highlight'}
-                                </button>
-                                {saveMessage && <p style={{color: saveMessage.includes('Error') ? 'red' : 'green', fontSize: '0.9em', margin: '0'}}>{saveMessage}</p>}
-                            </form>
-                        </div>
+                <section className="parse-url">
+                    <h2>Save from URL</h2>
+                    <form onSubmit={handleParseUrl}>
+                        <input 
+                            type="url" 
+                            placeholder="https://example.com/article"
+                            value={articleUrl}
+                            onChange={(e) => setArticleUrl(e.target.value)}
+                            required
+                        />
+                        <button type="submit" disabled={isParsing}>
+                            {isParsing ? 'Parsing...' : 'Parse & Save'}
+                        </button>
+                        {parseMessage && <p className="message">{parseMessage}</p>}
+                    </form>
+                </section>
 
-                        <div className="highlights-list-container" style={{marginTop: '30px'}}>
-                            <h3>Your Highlights</h3>
-                            {isLoadingHighlights ? (
-                                <p>Loading highlights...</p>
-                            ) : highlights.length > 0 ? (
-                                <ul style={{listStyleType: 'none', padding: 0}}>
-                                    {highlights.map(highlight => (
-                                        <li key={highlight.id} style={{marginBottom: '15px', padding: '15px', border: '1px solid #eee', borderRadius: '4px'}}>
-                                            <p style={{fontStyle: 'italic', margin: '0 0 10px 0'}}>"{highlight.text}"</p>
-                                            <small style={{color: '#666'}}>
-                                                - {highlight.author} ({highlight.source})
-                                                <br/>
-                                                Next Review: {highlight.nextReviewDate ? new Date(highlight.nextReviewDate.seconds * 1000).toLocaleDateString() : 'N/A'}
-                                            </small>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p>No highlights saved yet.</p>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="auth-container" style={{maxWidth: '400px', margin: '0 auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px'}}>
-                        <h2>{isLogin ? 'Login' : 'Sign Up'}</h2>
-                        <form onSubmit={handleAuth} style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                            <input 
-                                type="email" 
-                                placeholder="Email" 
-                                value={email} 
-                                onChange={(e) => setEmail(e.target.value)} 
-                                required 
-                                style={{padding: '8px'}}
-                            />
-                            <input 
-                                type="password" 
-                                placeholder="Password" 
-                                value={password} 
-                                onChange={(e) => setPassword(e.target.value)} 
-                                required 
-                                style={{padding: '8px'}}
-                            />
-                            <button type="submit" style={{padding: '10px', backgroundColor: '#0066cc', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'}}>
-                                {isLogin ? 'Login' : 'Sign Up'}
-                            </button>
-                        </form>
-                        {error && <p style={{color: 'red', fontSize: '0.9em'}}>{error}</p>}
-                        <p style={{textAlign: 'center', marginTop: '15px'}}>
-                            {isLogin ? "Don't have an account? " : "Already have an account? "}
-                            <button onClick={() => setIsLogin(!isLogin)} style={{background: 'none', border: 'none', color: '#0066cc', cursor: 'pointer', textDecoration: 'underline'}}>
-                                {isLogin ? 'Sign Up' : 'Login'}
-                            </button>
-                        </p>
-                    </div>
-                )}
+                <section className="highlights-list">
+                    <h2>Your Highlights</h2>
+                        <button onClick={handleExport} style={{marginBottom: "10px"}}>Export JSON</button>
+                        <input 
+                            type="text" 
+                            placeholder="Filter by tag..."
+                            value={filterTag}
+                            onChange={(e) => setFilterTag(e.target.value)}
+                            style={{marginBottom: "20px", width: "100%"}}
+                        />
+                    {isLoadingHighlights ? (
+                        <p>Loading highlights...</p>
+                    ) : highlights.length === 0 ? (
+                        <p>No highlights yet. Add some above!</p>
+                    ) : (
+                        highlights.filter(h => !filterTag || (h.tags && h.tags.includes(filterTag))).map(highlight => (
+                            <div key={highlight.id} className="highlight-card">
+                                {editingId === highlight.id ? (
+                                    <div>
+                                        <textarea value={editHighlightText} onChange={(e) => setEditHighlightText(e.target.value)} />
+                                        <button onClick={() => saveEdit(highlight.id)}>Save</button>
+                                        <button onClick={() => setEditingId(null)}>Cancel</button>
+                                    </div>
+                                ) : (
+                                    <p>"{highlight.text}"</p>
+                                )}
+                                <small>- {highlight.author} ({highlight.source})</small>
+                                {highlight.tags && highlight.tags.length > 0 && (
+                                    <div style={{marginTop: "5px"}}>
+                                        {highlight.tags.map(tag => <span key={tag} style={{background: "#eee", padding: "2px 5px", marginRight: "5px", borderRadius: "3px", fontSize: "0.8em"}}>{tag}</span>)}
+                                    </div>
+                                )}
+                                <div style={{marginTop: "10px"}}>
+                                    <button onClick={() => startEdit(highlight)} style={{marginRight: "5px", fontSize: "0.8em"}}>Edit</button>
+                                    <button onClick={() => handleDelete(highlight.id)} style={{fontSize: "0.8em", background: "#ff4444", color: "white"}}>Delete</button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </section>
             </main>
         </div>
     );
