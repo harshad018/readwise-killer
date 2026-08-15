@@ -118,6 +118,7 @@
 - **Target for Day 11:**
   - Post-launch monitoring.
   - Gather user feedback and plan for v2 features (e.g., tags, export functionality).
+
 ### Day 11 (August 14, 2026)
 - **Completed:**
   - Implemented export functionality allowing users to download their highlights as a JSON file.
@@ -126,3 +127,11 @@
 - **Target for Day 12:**
   - Implement filtering by tags in the "Read-it-later" list view.
   - Add ability to edit and delete existing highlights.
+
+### Day 12 (August 15, 2026)
+- **Completed:**
+  - Implemented filtering by tags in the "Read-it-later" list view.
+  - Added ability to edit and delete existing highlights.
+- **Target for Day 13:**
+  - Implement search functionality to find specific highlights by text or author.
+  - Add pagination or infinite scrolling for the "Read-it-later" list view to handle large numbers of highlights.
