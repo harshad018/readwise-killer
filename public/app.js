@@ -12,6 +12,10 @@ function App() {
     const [authorName, setAuthorName] = useState('');
     const [tagsInput, setTagsInput] = useState('');
     const [filterTag, setFilterTag] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     const [editingId, setEditingId] = useState(null);
     const [editHighlightText, setEditHighlightText] = useState('');
     const [isSaving, setIsSaving] = useState(false);
@@ -295,6 +299,7 @@ function App() {
         } catch (err) {
             console.error("Error parsing URL: ", err);
             setParseMessage(`Error: ${err.message}`);
+            setTimeout(() => setParseMessage(''), 5000);
         } finally {
             setIsParsing(false);
         }
@@ -311,12 +316,14 @@ function App() {
             const { collection, addDoc, serverTimestamp } = window.firebaseDbMethods;
             const highlightsRef = collection(window.firebaseDb, 'highlights');
             
+            const tagsArray = tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+
             await addDoc(highlightsRef, {
                 userId: user.uid,
                 text: highlightText,
-                source: sourceTitle || 'Unknown Source',
-                author: authorName || 'Unknown Author',
-                tags: tagsInput.split(',').map(t => t.trim()).filter(t => t),
+                source: sourceTitle || 'Manual Entry',
+                author: authorName || 'Unknown',
+                tags: tagsArray,
                 createdAt: serverTimestamp(),
                 repetition: 0,
                 interval: 1,
@@ -324,14 +331,13 @@ function App() {
                 nextReviewDate: serverTimestamp()
             });
 
-            setSaveMessage('Highlight saved successfully!');
             setHighlightText('');
             setSourceTitle('');
             setAuthorName('');
             setTagsInput('');
-            
+            setSaveMessage('Highlight saved successfully!');
             fetchHighlights();
-
+            
             setTimeout(() => setSaveMessage(''), 3000);
         } catch (err) {
             console.error("Error adding document: ", err);
@@ -341,28 +347,11 @@ function App() {
         }
     };
 
-
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (isReviewMode) {
-                const key = parseInt(e.key);
-                if (key >= 0 && key <= 5) {
-                    handleRating(key);
-                }
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isReviewMode, currentReviewIndex, reviewQueue]);
-
-
     if (!user) {
         return (
             <div className="auth-container">
-                <h1>Readwise Killer</h1>
+                <h2>{isLogin ? 'Login' : 'Sign Up'} to Readwise Killer</h2>
                 <form onSubmit={handleAuth}>
-                    <h2>{isLogin ? 'Login' : 'Sign Up'}</h2>
-                    {error && <p className="error">{error}</p>}
                     <input 
                         type="email" 
                         placeholder="Email" 
@@ -378,130 +367,156 @@ function App() {
                         required 
                     />
                     <button type="submit">{isLogin ? 'Login' : 'Sign Up'}</button>
-                    <p onClick={() => setIsLogin(!isLogin)} className="toggle-auth">
-                        {isLogin ? 'Need an account? Sign up' : 'Already have an account? Login'}
-                    </p>
                 </form>
+                {error && <p style={{color: 'red'}}>{error}</p>}
+                <p onClick={() => setIsLogin(!isLogin)} style={{cursor: 'pointer', color: 'blue'}}>
+                    {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login'}
+                </p>
             </div>
         );
     }
 
-    if (isReviewMode) {
+    if (isReviewMode && reviewQueue.length > 0) {
         const currentHighlight = reviewQueue[currentReviewIndex];
         return (
-            <div className="container review-mode">
-                <header>
+            <div className="container">
+                <div className="header">
                     <h1>Daily Review</h1>
                     <button onClick={() => setIsReviewMode(false)}>Exit Review</button>
-                </header>
-                <div className="progress-bar">
-                    <div 
-                        className="progress-fill" 
-                        style={{ width: `${((currentReviewIndex) / reviewQueue.length) * 100}%` }}
-                    ></div>
                 </div>
-                <p className="progress-text">{currentReviewIndex + 1} of {reviewQueue.length}</p>
-                
-                <div className="flashcard">
-                    <p className="highlight-text">"{currentHighlight.text}"</p>
-                    <p className="highlight-source">- {currentHighlight.author} ({currentHighlight.source})</p>
-                </div>
-
-                <div className="rating-controls">
-                    <p>How well did you remember this? (Press 0-5)</p>
+                <div className="review-card">
+                    <p className="progress">Highlight {currentReviewIndex + 1} of {reviewQueue.length}</p>
+                    <div className="highlight-content">
+                        <h2>"{currentHighlight.text}"</h2>
+                        <p>- {currentHighlight.author} ({currentHighlight.source})</p>
+                    </div>
                     <div className="rating-buttons">
-                        <button onClick={() => handleRating(0)} title="Complete blackout">0</button>
-                        <button onClick={() => handleRating(1)} title="Incorrect, but remembered upon seeing">1</button>
-                        <button onClick={() => handleRating(2)} title="Incorrect, but seemed easy to recall">2</button>
-                        <button onClick={() => handleRating(3)} title="Correct, but required significant effort">3</button>
-                        <button onClick={() => handleRating(4)} title="Correct, after some hesitation">4</button>
-                        <button onClick={() => handleRating(5)} title="Perfect recall">5</button>
+                        <p>How well did you remember this?</p>
+                        <button onClick={() => handleRating(0)} style={{background: '#ff4444'}}>Blackout (0)</button>
+                        <button onClick={() => handleRating(1)} style={{background: '#ff8800'}}>Incorrect (1)</button>
+                        <button onClick={() => handleRating(2)} style={{background: '#ffcc00'}}>Hard (2)</button>
+                        <button onClick={() => handleRating(3)} style={{background: '#99cc00'}}>Good (3)</button>
+                        <button onClick={() => handleRating(4)} style={{background: '#33cc33'}}>Easy (4)</button>
+                        <button onClick={() => handleRating(5)} style={{background: '#009900'}}>Perfect (5)</button>
                     </div>
                 </div>
             </div>
         );
     }
 
+    const filteredHighlights = highlights.filter(h => {
+        const matchesTag = !filterTag || (h.tags && h.tags.includes(filterTag));
+        const matchesSearch = !searchQuery || 
+            (h.text && h.text.toLowerCase().includes(searchQuery.toLowerCase())) || 
+            (h.author && h.author.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (h.source && h.source.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesTag && matchesSearch;
+    });
+
+    const paginatedHighlights = filteredHighlights.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const totalPages = Math.ceil(filteredHighlights.length / itemsPerPage);
+
     return (
         <div className="container">
-            <header>
+            <div className="header">
                 <h1>Readwise Killer</h1>
-                <div className="header-actions">
-                    <button onClick={startDailyReview} disabled={isLoadingReview} className="review-btn">
-                        {isLoadingReview ? 'Loading...' : 'Start Daily Review'}
-                    </button>
+                <div>
+                    <span style={{marginRight: "10px"}}>{user.email}</span>
                     <button onClick={handleLogout}>Logout</button>
                 </div>
-            </header>
+            </div>
 
-            <main>
-                <section className="add-highlight">
-                    <h2>Add New Highlight</h2>
-                    <form onSubmit={handleSaveHighlight}>
-                        <textarea 
-                            placeholder="Enter highlight text..."
-                            value={highlightText}
-                            onChange={(e) => setHighlightText(e.target.value)}
-                            required
-                        />
-                        <input 
-                            type="text" 
-                            placeholder="Source (e.g., Book Title)"
-                            value={sourceTitle}
-                            onChange={(e) => setSourceTitle(e.target.value)}
-                        />
-                        <input 
-                            type="text" 
-                            placeholder="Author (optional)"
-                            value={authorName}
-                            onChange={(e) => setAuthorName(e.target.value)}
-                        />
-                        <input 
-                            type="text" 
-                            placeholder="Tags (comma separated)"
-                            value={tagsInput}
-                            onChange={(e) => setTagsInput(e.target.value)}
-                        />
-                        <button type="submit" disabled={isSaving}>
-                            {isSaving ? 'Saving...' : 'Save Highlight'}
+            <div className="main-content">
+                <div className="left-panel">
+                    <div className="card">
+                        <h2>Daily Review</h2>
+                        <p>Review your highlights using spaced repetition.</p>
+                        <button 
+                            onClick={startDailyReview} 
+                            disabled={isLoadingReview}
+                            style={{width: '100%', padding: '15px', fontSize: '1.1em', background: '#4CAF50'}}
+                        >
+                            {isLoadingReview ? 'Loading...' : 'Start Daily Review'}
                         </button>
-                        {saveMessage && <p className="message">{saveMessage}</p>}
-                    </form>
-                </section>
+                    </div>
 
-                <section className="parse-url">
-                    <h2>Save from URL</h2>
-                    <form onSubmit={handleParseUrl}>
+                    <div className="card">
+                        <h2>Parse Article</h2>
+                        <form onSubmit={handleParseUrl}>
+                            <input 
+                                type="url" 
+                                placeholder="https://example.com/article" 
+                                value={articleUrl}
+                                onChange={(e) => setArticleUrl(e.target.value)}
+                                required
+                            />
+                            <button type="submit" disabled={isParsing}>
+                                {isParsing ? 'Parsing...' : 'Extract Highlights'}
+                            </button>
+                        </form>
+                        {parseMessage && <p style={{color: 'green', marginTop: '10px'}}>{parseMessage}</p>}
+                    </div>
+
+                    <div className="card">
+                        <h2>Add Manual Highlight</h2>
+                        <form onSubmit={handleSaveHighlight}>
+                            <textarea 
+                                placeholder="Highlight text..." 
+                                value={highlightText}
+                                onChange={(e) => setHighlightText(e.target.value)}
+                                required
+                                rows="4"
+                            />
+                            <input 
+                                type="text" 
+                                placeholder="Source/Book Title" 
+                                value={sourceTitle}
+                                onChange={(e) => setSourceTitle(e.target.value)}
+                            />
+                            <input 
+                                type="text" 
+                                placeholder="Author" 
+                                value={authorName}
+                                onChange={(e) => setAuthorName(e.target.value)}
+                            />
+                            <input 
+                                type="text" 
+                                placeholder="Tags (comma separated)" 
+                                value={tagsInput}
+                                onChange={(e) => setTagsInput(e.target.value)}
+                            />
+                            <button type="submit" disabled={isSaving}>
+                                {isSaving ? 'Saving...' : 'Save Highlight'}
+                            </button>
+                        </form>
+                        {saveMessage && <p style={{color: 'green', marginTop: '10px'}}>{saveMessage}</p>}
+                    </div>
+                </div>
+
+                <div className="right-panel">
+                    <h2>Your Highlights ({filteredHighlights.length})</h2>
+                    <button onClick={handleExport} style={{marginBottom: "10px"}}>Export JSON</button>
                         <input 
-                            type="url" 
-                            placeholder="https://example.com/article"
-                            value={articleUrl}
-                            onChange={(e) => setArticleUrl(e.target.value)}
-                            required
+                            type="text" 
+                            placeholder="Search by text, author, or source..."
+                            value={searchQuery}
+                            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                            style={{marginBottom: "10px", width: "100%"}}
                         />
-                        <button type="submit" disabled={isParsing}>
-                            {isParsing ? 'Parsing...' : 'Parse & Save'}
-                        </button>
-                        {parseMessage && <p className="message">{parseMessage}</p>}
-                    </form>
-                </section>
-
-                <section className="highlights-list">
-                    <h2>Your Highlights</h2>
-                        <button onClick={handleExport} style={{marginBottom: "10px"}}>Export JSON</button>
                         <input 
                             type="text" 
                             placeholder="Filter by tag..."
                             value={filterTag}
-                            onChange={(e) => setFilterTag(e.target.value)}
+                            onChange={(e) => { setFilterTag(e.target.value); setCurrentPage(1); }}
                             style={{marginBottom: "20px", width: "100%"}}
                         />
                     {isLoadingHighlights ? (
                         <p>Loading highlights...</p>
-                    ) : highlights.length === 0 ? (
-                        <p>No highlights yet. Add some above!</p>
+                    ) : filteredHighlights.length === 0 ? (
+                        <p>No highlights found.</p>
                     ) : (
-                        highlights.filter(h => !filterTag || (h.tags && h.tags.includes(filterTag))).map(highlight => (
+                        <>
+                        {paginatedHighlights.map(highlight => (
                             <div key={highlight.id} className="highlight-card">
                                 {editingId === highlight.id ? (
                                     <div>
@@ -518,15 +533,19 @@ function App() {
                                         {highlight.tags.map(tag => <span key={tag} style={{background: "#eee", padding: "2px 5px", marginRight: "5px", borderRadius: "3px", fontSize: "0.8em"}}>{tag}</span>)}
                                     </div>
                                 )}
-                                <div style={{marginTop: "10px"}}>
-                                    <button onClick={() => startEdit(highlight)} style={{marginRight: "5px", fontSize: "0.8em"}}>Edit</button>
-                                    <button onClick={() => handleDelete(highlight.id)} style={{fontSize: "0.8em", background: "#ff4444", color: "white"}}>Delete</button>
-                                </div>
+                                <button onClick={() => startEdit(highlight)}>Edit</button>
+                                <button onClick={() => handleDelete(highlight.id)} style={{background: "#ff4444", color: "white", marginTop: "10px"}}>Delete</button>
                             </div>
-                        ))
+                        ))}
+                        <div style={{display: "flex", justifyContent: "space-between", marginTop: "20px"}}>
+                            <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)}>Previous</button>
+                            <span>Page {currentPage} of {totalPages}</span>
+                            <button disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(prev => prev + 1)}>Next</button>
+                        </div>
+                        </>
                     )}
-                </section>
-            </main>
+                </div>
+            </div>
         </div>
     );
 }
