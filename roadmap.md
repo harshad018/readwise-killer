@@ -135,3 +135,11 @@
 - **Target for Day 13:**
   - Implement search functionality to find specific highlights by text or author.
   - Add pagination or infinite scrolling for the "Read-it-later" list view to handle large numbers of highlights.
+
+### Day 13 (August 16, 2026)
+- **Completed:**
+  - Implemented search functionality to find specific highlights by text, author, or source.
+  - Added pagination for the "Read-it-later" list view to handle large numbers of highlights efficiently.
+- **Target for Day 14:**
+  - Implement a dashboard view with statistics (e.g., total highlights, review streak).
+  - Add dark mode support for better reading experience.
